@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/tipbk/blog-backend/model"
+	"github.com/tipbk/sneakfeed-service/model"
 	"golang.org/x/crypto/bcrypt"
 )
 

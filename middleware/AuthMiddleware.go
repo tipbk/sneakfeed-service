@@ -5,9 +5,9 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/tipbk/blog-backend/config"
-	"github.com/tipbk/blog-backend/service"
-	"github.com/tipbk/blog-backend/util"
+	"github.com/tipbk/sneakfeed-service/config"
+	"github.com/tipbk/sneakfeed-service/service"
+	"github.com/tipbk/sneakfeed-service/util"
 )
 
 type AuthMiddleware interface {

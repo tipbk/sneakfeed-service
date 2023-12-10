@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/tipbk/blog-backend/dto"
-	"github.com/tipbk/blog-backend/service"
-	"github.com/tipbk/blog-backend/util"
+	"github.com/tipbk/sneakfeed-service/dto"
+	"github.com/tipbk/sneakfeed-service/service"
+	"github.com/tipbk/sneakfeed-service/util"
 )
 
 type imageUploaderHandler struct {

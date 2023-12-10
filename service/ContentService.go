@@ -3,8 +3,8 @@ package service
 import (
 	"errors"
 
-	"github.com/tipbk/blog-backend/model"
-	"github.com/tipbk/blog-backend/repository"
+	"github.com/tipbk/sneakfeed-service/model"
+	"github.com/tipbk/sneakfeed-service/repository"
 )
 
 type ContentService interface {

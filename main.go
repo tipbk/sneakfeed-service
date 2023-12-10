@@ -3,11 +3,11 @@ package main
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/tipbk/blog-backend/config"
-	"github.com/tipbk/blog-backend/handler"
-	"github.com/tipbk/blog-backend/middleware"
-	"github.com/tipbk/blog-backend/repository"
-	"github.com/tipbk/blog-backend/service"
+	"github.com/tipbk/sneakfeed-service/config"
+	"github.com/tipbk/sneakfeed-service/handler"
+	"github.com/tipbk/sneakfeed-service/middleware"
+	"github.com/tipbk/sneakfeed-service/repository"
+	"github.com/tipbk/sneakfeed-service/service"
 )
 
 func main() {

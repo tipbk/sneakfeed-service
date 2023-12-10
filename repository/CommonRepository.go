@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/tipbk/blog-backend/config"
+	"github.com/tipbk/sneakfeed-service/config"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"

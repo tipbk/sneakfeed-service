@@ -1,4 +1,4 @@
-module github.com/tipbk/blog-backend
+module github.com/tipbk/sneakfeed-service
 
 go 1.18
 

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tipbk/blog-backend/config"
-	"github.com/tipbk/blog-backend/model"
+	"github.com/tipbk/sneakfeed-service/config"
+	"github.com/tipbk/sneakfeed-service/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
