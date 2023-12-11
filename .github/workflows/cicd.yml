@@ -39,3 +39,12 @@ jobs:
         with:
           service: "${{ secrets.GCP_IMAGE_NAME }}"
           image: "${{ secrets.GCP_IMAGE_REGISTRY }}/${{ secrets.GCP_IMAGE_NAME }}"
+          env_vars: |
+            ${{ secrets.ACCESS_TOKEN_KEY }}=${{ secrets.ACCESS_TOKEN_VALUE }}
+            ${{ secrets.REFRESH_TOKEN_KEY }}=${{ secrets.REFRESH_TOKEN_VALUE }}
+            ${{ secrets.IMAGEKIT_PUBLIC_KEY_KEY }}=${{ secrets.IMAGEKIT_PUBLIC_KEY_VALUE }}
+            ${{ secrets.IMAGEKIT_PRIVATE_KEY_KEY }}=${{ secrets.IMAGEKIT_PRIVATE_KEY_VALUE }}
+            ${{ secrets.IMAGEKIT_ENDPOINT_URL_KEY }}=${{ secrets.IMAGEKIT_ENDPOINT_URL_VALUE }}
+            ${{ secrets.MONGODB_USERNAME_KEY }}=${{ secrets.MONGODB_USERNAME_VALUE }}
+            ${{ secrets.MONGODB_PASSWORD_KEY }}=${{ secrets.MONGODB_PASSWORD_VALUE }}
+            ${{ secrets.DATABASE_NAME_KEY }}=${{ secrets.DATABASE_NAME_VALUE }}
