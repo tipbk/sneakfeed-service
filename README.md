@@ -7,22 +7,22 @@ This project aims to play with unfamiliar techstacks such as Mongodb and Imageki
 
 ### No auth zone
 
-- GET /ping -> Health check
-- POST /register -> Register as a user
-- POST /login -> Login as a user
-- POST /refresh -> Refresh the access token with refresh token
+- `GET /ping` -> Health check
+- `POST /register` -> Register as a user
+- `POST /login` -> Login as a user
+- `POST /refresh` -> Refresh the access token with refresh token
 
 ### Auth zone
 
-- GET /posts -> Get all posts
-- GET /posts/:postID -> Get a single post
-- POST /posts -> Create a new post
-- GET /posts/:postID/comments -> Get all comments in post
-- POST /posts/:postID/comments -> Add a new comment to the post
-- POST /posts/:postID/like -> Like a post
+- `GET /posts` -> Get all posts
+- `GET /posts/:postID` -> Get a single post
+- `POST /posts` -> Create a new post
+- `GET /posts/:postID/comments` -> Get all comments in post
+- `POST /posts/:postID/comments` -> Add a new comment to the post
+- `POST /posts/:postID/like` -> Like a post
 
-- GET /profiles -> Get current user profile
-- PATCH /profiles -> Update profile image
+- `GET /profiles` -> Get current user profile
+- `PATCH /profiles` -> Update profile image
 
 ## Environment Variables
 
