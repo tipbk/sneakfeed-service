@@ -27,7 +27,6 @@ func main() {
 	}
 
 	imageUploaderService := service.NewImageUploaderService()
-	imageUploaderHandler := handler.NewImageUploaderHandler(imageUploaderService)
 	userRepository := repository.NewUserRepository(envConfig, mongoClient)
 	userService := service.NewUserService(userRepository)
 	userHandler := handler.NewUserHandler(envConfig, userService, imageUploaderService)
@@ -49,9 +48,7 @@ func main() {
 		authorized.GET("/posts/:postID/comments", contentHandler.GetCommentByPostID)
 		authorized.POST("/posts", contentHandler.CreatePost)
 		authorized.POST("/posts/:postID/comments", contentHandler.AddComment)
-		authorized.POST("/image/upload", imageUploaderHandler.UploadImage)
 		authorized.GET("/profiles", userHandler.GetProfile)
-		authorized.PUT("/profiles", userHandler.UpdateProfile)
 		authorized.PATCH("/profiles", userHandler.PartiallyUpdateProfile)
 		authorized.POST("/posts/:postID/like", contentHandler.ToggleLikePostByID)
 	}

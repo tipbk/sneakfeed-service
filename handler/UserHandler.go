@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/tipbk/sneakfeed-service/config"
 	"github.com/tipbk/sneakfeed-service/dto"
-	"github.com/tipbk/sneakfeed-service/model"
 	"github.com/tipbk/sneakfeed-service/service"
 	"github.com/tipbk/sneakfeed-service/util"
 )
@@ -15,7 +14,6 @@ type UserHandler interface {
 	Register(c *gin.Context)
 	Login(c *gin.Context)
 	GetProfile(c *gin.Context)
-	UpdateProfile(c *gin.Context)
 	PartiallyUpdateProfile(c *gin.Context)
 	RefreshToken(c *gin.Context)
 }
@@ -89,29 +87,6 @@ func (h *userHandler) Login(c *gin.Context) {
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}))
-}
-
-func (h *userHandler) UpdateProfile(c *gin.Context) {
-	currentUser, err := util.GetUserFromContext(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, util.GenerateFailedResponse(err.Error()))
-		return
-	}
-	var request model.User
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, util.GenerateFailedResponse(err.Error()))
-		return
-	}
-	if request.ProfileImage == "" {
-		c.JSON(http.StatusOK, util.GenerateSuccessResponse("nothing to update"))
-		return
-	}
-	err = h.userService.UpdateProfile(currentUser.ID.Hex(), &request)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
-		return
-	}
-	c.JSON(http.StatusOK, util.GenerateSuccessResponse("updated"))
 }
 
 func (h *userHandler) GetProfile(c *gin.Context) {
