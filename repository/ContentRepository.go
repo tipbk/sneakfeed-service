@@ -17,7 +17,7 @@ type ContentRepository interface {
 	CreatePost(userID string, content string, imageUrl *string) (string, error)
 	AddComment(userID string, postID string, content string) (string, error)
 	FindPost(postID string) (*model.Post, error)
-	GetPosts() ([]model.PostDetail, error)
+	GetPosts(userID string) ([]model.PostDetail, error)
 	GetPostByID(userID, postID string) (*model.PostDetail, error)
 	GetCommentFromPostID(postID string) ([]model.Comment, error)
 	IsPostLikeByUserID(userID string, postID string) (bool, error)
@@ -188,7 +188,7 @@ func (r *contentRepository) CountLikeAndCommentOnPost(postID string) (int64, int
 	return likeCount, commentCount, nil
 }
 
-func (r *contentRepository) GetPosts() ([]model.PostDetail, error) {
+func (r *contentRepository) GetPosts(userID string) ([]model.PostDetail, error) {
 	collection := r.mongoClient.Database(r.envConfig.DatabaseName).Collection("post")
 
 	pipeline := mongo.Pipeline{
@@ -227,6 +227,23 @@ func (r *contentRepository) GetPosts() ([]model.PostDetail, error) {
 					{"objectUserID", "$objectUserID"},
 					{"stringPostID", "$stringPostID"},
 					{"totalLikes", bson.D{{"$size", "$likeResult"}}},
+					{"isLike",
+						bson.D{
+							{"$ifNull",
+								bson.A{
+									bson.D{
+										{"$in",
+											bson.A{
+												userID,
+												"$likeResult.userID",
+											},
+										},
+									},
+									false,
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -252,6 +269,7 @@ func (r *contentRepository) GetPosts() ([]model.PostDetail, error) {
 					{"stringPostID", "$stringPostID"},
 					{"totalLikes", "$totalLikes"},
 					{"totalComments", bson.D{{"$size", "$commentResult"}}},
+					{"isLike", "$isLike"},
 				},
 			},
 		},
@@ -279,6 +297,7 @@ func (r *contentRepository) GetPosts() ([]model.PostDetail, error) {
 					{"totalComments", "$totalComments"},
 					{"username", bson.D{{"$first", "$userResult.username"}}},
 					{"profileImage", bson.D{{"$first", "$userResult.profileImage"}}},
+					{"isLike", "$isLike"},
 				},
 			},
 		},

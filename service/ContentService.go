@@ -10,7 +10,7 @@ import (
 type ContentService interface {
 	CreatePost(userID string, content string, imageUrl *string) (string, error)
 	AddComment(userID string, postID string, content string) (string, error)
-	GetPosts() ([]model.PostDetail, error)
+	GetPosts(userID string) ([]model.PostDetail, error)
 	GetPostByID(userID, postID string) (*model.PostDetail, error)
 	GetCommentFromPostID(postID string) ([]model.Comment, error)
 	FindPost(postID string) (*model.Post, error)
@@ -92,8 +92,8 @@ func (s *contentService) CountLikeAndCommentOnPost(postID string) (int64, int64,
 	return likeCount, commentCount, nil
 }
 
-func (s *contentService) GetPosts() ([]model.PostDetail, error) {
-	posts, err := s.contentRepository.GetPosts()
+func (s *contentService) GetPosts(userID string) ([]model.PostDetail, error) {
+	posts, err := s.contentRepository.GetPosts(userID)
 	if err != nil {
 		return nil, err
 	}

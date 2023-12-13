@@ -100,7 +100,12 @@ func (h *contentHandler) AddComment(c *gin.Context) {
 }
 
 func (h *contentHandler) GetPosts(c *gin.Context) {
-	posts, err := h.contentService.GetPosts()
+	user, err := util.GetUserFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
+		return
+	}
+	posts, err := h.contentService.GetPosts(user.ID.Hex())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
 		return
