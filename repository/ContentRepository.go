@@ -270,6 +270,23 @@ func (r *contentRepository) GetPosts(userID string) ([]model.PostDetail, error) 
 					{"totalLikes", "$totalLikes"},
 					{"totalComments", bson.D{{"$size", "$commentResult"}}},
 					{"isLike", "$isLike"},
+					{"isComment",
+						bson.D{
+							{"$ifNull",
+								bson.A{
+									bson.D{
+										{"$in",
+											bson.A{
+												userID,
+												"$commentResult.userID",
+											},
+										},
+									},
+									false,
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -298,6 +315,7 @@ func (r *contentRepository) GetPosts(userID string) ([]model.PostDetail, error) 
 					{"username", bson.D{{"$first", "$userResult.username"}}},
 					{"profileImage", bson.D{{"$first", "$userResult.profileImage"}}},
 					{"isLike", "$isLike"},
+					{"isComment", "$isComment"},
 				},
 			},
 		},
@@ -410,6 +428,23 @@ func (r *contentRepository) GetPostByID(userID, postID string) (*model.PostDetai
 					{"totalLikes", "$totalLikes"},
 					{"totalComments", bson.D{{"$size", "$commentResult"}}},
 					{"isLike", "$isLike"},
+					{"isComment",
+						bson.D{
+							{"$ifNull",
+								bson.A{
+									bson.D{
+										{"$in",
+											bson.A{
+												userID,
+												"$commentResult.userID",
+											},
+										},
+									},
+									false,
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -438,6 +473,7 @@ func (r *contentRepository) GetPostByID(userID, postID string) (*model.PostDetai
 					{"username", bson.D{{"$first", "$userResult.username"}}},
 					{"profileImage", bson.D{{"$first", "$userResult.profileImage"}}},
 					{"isLike", "$isLike"},
+					{"isComment", "$isComment"},
 				},
 			},
 		},

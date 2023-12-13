@@ -13,4 +13,5 @@ type GetPostByIDResponse struct {
 	PostImageUrl    *string    `json:"postImageUrl"`
 	TotalLikes      int64      `json:"totalLikes"`
 	TotalComments   int64      `json:"totalComments"`
+	IsComment       bool       `json:"isComment"`
 }

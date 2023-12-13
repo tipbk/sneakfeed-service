@@ -25,4 +25,5 @@ type PostDetail struct {
 	TotalLikes      int                `json:"totalLikes"`
 	TotalComments   int                `json:"totalComments"`
 	IsLike          bool               `json:"isLike"`
+	IsComment       bool               `json:"isComment"`
 }

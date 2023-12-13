@@ -138,6 +138,7 @@ func (h *contentHandler) GetPostByID(c *gin.Context) {
 		TotalLikes:      int64(postDetail.TotalLikes),
 		TotalComments:   int64(postDetail.TotalComments),
 		IsLike:          postDetail.IsLike,
+		IsComment:       postDetail.IsComment,
 	}
 
 	c.JSON(http.StatusOK, util.GenerateSuccessResponse(response))
