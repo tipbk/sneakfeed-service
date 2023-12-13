@@ -346,6 +346,7 @@ func (r *contentRepository) GetPostByID(userID, postID string) (*model.PostDetai
 					{"_id", "$_id"},
 					{"content", "$content"},
 					{"userID", "$userID"},
+					{"imageUrl", "$imageUrl"},
 					{"createdDatetime", "$createdDatetime"},
 				},
 			},

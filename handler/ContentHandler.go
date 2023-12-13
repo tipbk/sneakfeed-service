@@ -127,21 +127,7 @@ func (h *contentHandler) GetPostByID(c *gin.Context) {
 		return
 	}
 
-	response := dto.GetPostByIDResponse{
-		PostID:          postID,
-		Content:         postDetail.Content,
-		CreatedDatetime: postDetail.CreatedDatetime,
-		PostImageUrl:    postDetail.ImageUrl,
-		ProfileImage:    postDetail.ProfileImage,
-		UserID:          user.ID.Hex(),
-		Username:        user.Username,
-		TotalLikes:      int64(postDetail.TotalLikes),
-		TotalComments:   int64(postDetail.TotalComments),
-		IsLike:          postDetail.IsLike,
-		IsComment:       postDetail.IsComment,
-	}
-
-	c.JSON(http.StatusOK, util.GenerateSuccessResponse(response))
+	c.JSON(http.StatusOK, util.GenerateSuccessResponse(postDetail))
 }
 
 func (h *contentHandler) GetCommentByPostID(c *gin.Context) {
