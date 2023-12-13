@@ -116,12 +116,7 @@ func (h *contentHandler) GetPostByID(c *gin.Context) {
 		return
 	}
 	postID := c.Param("postID")
-	postDetail, err := h.contentService.GetPostByID(postID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
-		return
-	}
-	isLike, err := h.contentService.IsPostLikeByUserID(user.ID.Hex(), postID)
+	postDetail, err := h.contentService.GetPostByID(user.ID.Hex(), postID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
 		return
@@ -137,7 +132,7 @@ func (h *contentHandler) GetPostByID(c *gin.Context) {
 		Username:        user.Username,
 		TotalLikes:      int64(postDetail.TotalLikes),
 		TotalComments:   int64(postDetail.TotalComments),
-		IsLike:          isLike,
+		IsLike:          postDetail.IsLike,
 	}
 
 	c.JSON(http.StatusOK, util.GenerateSuccessResponse(response))

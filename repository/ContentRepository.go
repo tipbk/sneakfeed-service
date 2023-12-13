@@ -18,7 +18,7 @@ type ContentRepository interface {
 	AddComment(userID string, postID string, content string) (string, error)
 	FindPost(postID string) (*model.Post, error)
 	GetPosts() ([]model.PostDetail, error)
-	GetPostByID(postID string) (*model.PostDetail, error)
+	GetPostByID(userID, postID string) (*model.PostDetail, error)
 	GetCommentFromPostID(postID string) ([]model.Comment, error)
 	IsPostLikeByUserID(userID string, postID string) (bool, error)
 	LikePost(userID string, postID string) (string, error)
@@ -298,7 +298,7 @@ func (r *contentRepository) GetPosts() ([]model.PostDetail, error) {
 	return results, nil
 }
 
-func (r *contentRepository) GetPostByID(postID string) (*model.PostDetail, error) {
+func (r *contentRepository) GetPostByID(userID, postID string) (*model.PostDetail, error) {
 	collection := r.mongoClient.Database(r.envConfig.DatabaseName).Collection("post")
 
 	pipeline := mongo.Pipeline{
@@ -307,7 +307,6 @@ func (r *contentRepository) GetPostByID(postID string) (*model.PostDetail, error
 				bson.D{
 					{"stringPostId", bson.D{{"$toString", "$_id"}}},
 					{"_id", "$_id"},
-					{"imageUrl", "$imageUrl"},
 					{"content", "$content"},
 					{"userID", "$userID"},
 					{"createdDatetime", "$createdDatetime"},
@@ -349,6 +348,23 @@ func (r *contentRepository) GetPostByID(postID string) (*model.PostDetail, error
 					{"objectUserID", "$objectUserID"},
 					{"stringPostID", "$stringPostID"},
 					{"totalLikes", bson.D{{"$size", "$likeResult"}}},
+					{"isLike",
+						bson.D{
+							{"$ifNull",
+								bson.A{
+									bson.D{
+										{"$in",
+											bson.A{
+												userID,
+												"$likeResult.userID",
+											},
+										},
+									},
+									false,
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -374,6 +390,7 @@ func (r *contentRepository) GetPostByID(postID string) (*model.PostDetail, error
 					{"stringPostID", "$stringPostID"},
 					{"totalLikes", "$totalLikes"},
 					{"totalComments", bson.D{{"$size", "$commentResult"}}},
+					{"isLike", "$isLike"},
 				},
 			},
 		},
@@ -401,6 +418,7 @@ func (r *contentRepository) GetPostByID(postID string) (*model.PostDetail, error
 					{"totalComments", "$totalComments"},
 					{"username", bson.D{{"$first", "$userResult.username"}}},
 					{"profileImage", bson.D{{"$first", "$userResult.profileImage"}}},
+					{"isLike", "$isLike"},
 				},
 			},
 		},

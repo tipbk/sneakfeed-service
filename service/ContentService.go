@@ -11,11 +11,10 @@ type ContentService interface {
 	CreatePost(userID string, content string, imageUrl *string) (string, error)
 	AddComment(userID string, postID string, content string) (string, error)
 	GetPosts() ([]model.PostDetail, error)
-	GetPostByID(postID string) (*model.PostDetail, error)
+	GetPostByID(userID, postID string) (*model.PostDetail, error)
 	GetCommentFromPostID(postID string) ([]model.Comment, error)
 	FindPost(postID string) (*model.Post, error)
 	ToggleLikeOnPost(userID string, postID string) (bool, error)
-	IsPostLikeByUserID(userID, postID string) (bool, error)
 	CountLikeAndCommentOnPost(postID string) (int64, int64, error)
 }
 
@@ -85,14 +84,6 @@ func (s *contentService) ToggleLikeOnPost(userID string, postID string) (bool, e
 	}
 }
 
-func (s *contentService) IsPostLikeByUserID(userID, postID string) (bool, error) {
-	isLike, err := s.contentRepository.IsPostLikeByUserID(userID, postID)
-	if err != nil {
-		return false, err
-	}
-	return isLike, nil
-}
-
 func (s *contentService) CountLikeAndCommentOnPost(postID string) (int64, int64, error) {
 	likeCount, commentCount, err := s.contentRepository.CountLikeAndCommentOnPost(postID)
 	if err != nil {
@@ -109,8 +100,8 @@ func (s *contentService) GetPosts() ([]model.PostDetail, error) {
 	return posts, nil
 }
 
-func (s *contentService) GetPostByID(postID string) (*model.PostDetail, error) {
-	post, err := s.contentRepository.GetPostByID(postID)
+func (s *contentService) GetPostByID(userID, postID string) (*model.PostDetail, error) {
+	post, err := s.contentRepository.GetPostByID(userID, postID)
 	if err != nil {
 		return nil, err
 	}

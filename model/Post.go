@@ -24,4 +24,5 @@ type PostDetail struct {
 	ProfileImage    string             `json:"profileImage"`
 	TotalLikes      int                `json:"totalLikes"`
 	TotalComments   int                `json:"totalComments"`
+	IsLike          bool               `json:"isLike"`
 }
