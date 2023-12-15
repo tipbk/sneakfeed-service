@@ -90,7 +90,7 @@ func GenerateRefreshToken(secretString, userID string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userID": userID,
 		"iss":    "SNEAKFEED",
-		"exp":    time.Now().Add(time.Hour * 24).Unix(),
+		"exp":    time.Now().Add(time.Hour * 168).Unix(),
 	})
 
 	secretKey := []byte(secretString)
