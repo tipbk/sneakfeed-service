@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/tipbk/sneakfeed-service/config"
@@ -46,7 +47,11 @@ func (h *userHandler) Register(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, util.GenerateFailedResponse("password cannot be empty"))
 		return
 	}
-	_, err := h.userService.CreateUser(registerRequest.Username, registerRequest.Password)
+	if registerRequest.Email == "" {
+		c.JSON(http.StatusBadRequest, util.GenerateFailedResponse("email cannot be empty"))
+		return
+	}
+	_, err := h.userService.CreateUser(strings.ToLower(registerRequest.Username), registerRequest.Password, strings.ToLower(registerRequest.Email))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
 		return

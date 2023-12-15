@@ -10,7 +10,7 @@ type userService struct {
 }
 
 type UserService interface {
-	CreateUser(username string, password string) (*model.User, error)
+	CreateUser(username string, password string, email string) (*model.User, error)
 	LoginUser(username string, password string) (*model.User, error)
 	FindUserWithUserID(userID string) (*model.User, error)
 	GetUsersByIDList(userIDs []string) ([]model.User, error)
@@ -23,8 +23,8 @@ func NewUserService(userRepository repository.UserRepository) UserService {
 	}
 }
 
-func (s *userService) CreateUser(username string, password string) (*model.User, error) {
-	user, err := s.userRepository.CreateUser(username, password)
+func (s *userService) CreateUser(username string, password string, email string) (*model.User, error) {
+	user, err := s.userRepository.CreateUser(username, password, email)
 	if err != nil {
 		return nil, err
 	}

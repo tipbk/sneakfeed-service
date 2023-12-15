@@ -14,7 +14,7 @@ import (
 )
 
 type UserRepository interface {
-	CreateUser(username string, password string) (*model.User, error)
+	CreateUser(username string, password string, email string) (*model.User, error)
 	LoginUser(username string, password string) (*model.User, error)
 	FindUserWithUserID(userID string) (*model.User, error)
 	GetUsersByIDList(userIDs []string) ([]model.User, error)
@@ -33,10 +33,14 @@ func NewUserRepository(envConfig *config.EnvConfig, mongoClient *mongo.Client) U
 	}
 }
 
-func (r *userRepository) CreateUser(username string, password string) (*model.User, error) {
+func (r *userRepository) CreateUser(username string, password string, email string) (*model.User, error) {
 	_, err := r.FindUser(username)
 	if err == nil {
-		return nil, errors.New("user already taken")
+		return nil, errors.New("username already taken")
+	}
+	_, err = r.FindUserByEmail(email)
+	if err == nil {
+		return nil, errors.New("email already taken")
 	}
 	hashPassword, err := util.HashPassword(password)
 	if err != nil {
@@ -46,6 +50,7 @@ func (r *userRepository) CreateUser(username string, password string) (*model.Us
 		ID:       primitive.NewObjectID(),
 		Username: username,
 		Password: hashPassword,
+		Email:    email,
 	}
 	collection := r.mongoClient.Database(r.envConfig.DatabaseName).Collection("user")
 	_, err = collection.InsertOne(context.Background(), newUser)
@@ -61,6 +66,14 @@ func (r *userRepository) FindUser(username string) (*model.User, error) {
 
 	var existingUser model.User
 	err := collection.FindOne(context.Background(), bson.M{"username": username}).Decode(&existingUser)
+	return &existingUser, err
+}
+
+func (r *userRepository) FindUserByEmail(email string) (*model.User, error) {
+	collection := r.mongoClient.Database(r.envConfig.DatabaseName).Collection("user")
+
+	var existingUser model.User
+	err := collection.FindOne(context.Background(), bson.M{"email": email}).Decode(&existingUser)
 	return &existingUser, err
 }
 
