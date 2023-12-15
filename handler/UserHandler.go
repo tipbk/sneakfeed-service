@@ -16,7 +16,7 @@ type UserHandler interface {
 	Register(c *gin.Context)
 	Login(c *gin.Context)
 	GetProfile(c *gin.Context)
-	PartiallyUpdateProfile(c *gin.Context)
+	UpdateProfilePicture(c *gin.Context)
 	RefreshToken(c *gin.Context)
 }
 
@@ -145,13 +145,13 @@ func (h *userHandler) RefreshToken(c *gin.Context) {
 	}))
 }
 
-func (h *userHandler) PartiallyUpdateProfile(c *gin.Context) {
+func (h *userHandler) UpdateProfilePicture(c *gin.Context) {
 	currentUser, err := util.GetUserFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, util.GenerateFailedResponse(err.Error()))
 		return
 	}
-	var request dto.PartiallyUpdateProfile
+	var request dto.UpdateProfilePictureRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, util.GenerateFailedResponse(err.Error()))
 		return

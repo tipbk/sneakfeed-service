@@ -1,5 +1,5 @@
 package dto
 
-type PartiallyUpdateProfile struct {
+type UpdateProfilePictureRequest struct {
 	ImageBase64 string `json:"imageBase64"`
 }
