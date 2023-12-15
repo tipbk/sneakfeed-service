@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -75,7 +76,8 @@ func (h *userHandler) Login(c *gin.Context) {
 	}
 	user, err := h.userService.LoginUser(loginRequest.Username, loginRequest.Password)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
+		fmt.Println(err.Error())
+		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse("Username or password is incorrect or username does not exist."))
 		return
 	}
 	accessToken, err := util.GenerateAccessToken(h.envConfig.AccessTokenSecret, user.ID.Hex())
