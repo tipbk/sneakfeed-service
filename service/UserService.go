@@ -1,6 +1,9 @@
 package service
 
 import (
+	"errors"
+	"regexp"
+
 	"github.com/tipbk/sneakfeed-service/model"
 	"github.com/tipbk/sneakfeed-service/repository"
 )
@@ -24,6 +27,10 @@ func NewUserService(userRepository repository.UserRepository) UserService {
 }
 
 func (s *userService) CreateUser(username string, password string, email string) (*model.User, error) {
+	err := s.validateRegisterInput(username, password, email)
+	if err != nil {
+		return nil, err
+	}
 	user, err := s.userRepository.CreateUser(username, password, email)
 	if err != nil {
 		return nil, err
@@ -60,5 +67,39 @@ func (s *userService) UpdateProfile(userID string, updatedUser *model.User) erro
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (s *userService) validateRegisterInput(username, password, email string) error {
+	usernameRegex := `^[0-9a-z]{5,15}$`
+	passwordRegex := `^[a-zA-Z0-9!@#$%^&*]{6,16}$`
+	emailRegex := `^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$`
+
+	matched, err := regexp.Match(usernameRegex, []byte(username))
+	if err != nil {
+		return err
+	}
+	if !matched {
+		return errors.New("username is invalid")
+	}
+
+	matched, err = regexp.Match(passwordRegex, []byte(password))
+	if err != nil {
+		return err
+	}
+
+	if !matched {
+		return errors.New("password is invalid")
+	}
+
+	matched, err = regexp.Match(emailRegex, []byte(email))
+	if err != nil {
+		return err
+	}
+
+	if !matched {
+		return errors.New("email is invalid")
+	}
+
 	return nil
 }
