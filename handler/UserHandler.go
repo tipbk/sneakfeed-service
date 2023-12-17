@@ -16,8 +16,8 @@ type UserHandler interface {
 	Register(c *gin.Context)
 	Login(c *gin.Context)
 	GetProfile(c *gin.Context)
-	UpdateProfilePicture(c *gin.Context)
 	RefreshToken(c *gin.Context)
+	UpdateUserProfile(c *gin.Context)
 }
 
 type userHandler struct {
@@ -145,35 +145,42 @@ func (h *userHandler) RefreshToken(c *gin.Context) {
 	}))
 }
 
-func (h *userHandler) UpdateProfilePicture(c *gin.Context) {
+func (h *userHandler) UpdateUserProfile(c *gin.Context) {
 	currentUser, err := util.GetUserFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, util.GenerateFailedResponse(err.Error()))
 		return
 	}
-	var request dto.UpdateProfilePictureRequest
+	var request dto.UpdateUserProfileRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, util.GenerateFailedResponse(err.Error()))
 		return
 	}
 
-	if request.ImageBase64 == "" {
-		c.JSON(http.StatusUnauthorized, util.GenerateFailedResponse("imageBase64 cannot be empty"))
-		return
+	imageUrl := ""
+
+	if request.ImageBase64 != "" {
+		uploadResponse, err := h.imageUploaderService.UploadImage(request.ImageBase64)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
+			return
+		}
+		imageUrl = uploadResponse.Data.Url
 	}
 
-	uploadResponse, err := h.imageUploaderService.UploadImage(request.ImageBase64)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
-		return
+	if imageUrl != "" {
+		currentUser.ProfileImage = imageUrl
 	}
 
-	imageUrl := uploadResponse.Data.Url
-	currentUser.ProfileImage = imageUrl
+	if request.DisplayName != "" {
+		currentUser.DisplayName = request.DisplayName
+	}
+
 	err = h.userService.UpdateProfile(currentUser.ID.Hex(), currentUser)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
 		return
 	}
+
 	c.JSON(http.StatusOK, util.GenerateSuccessResponse("updated"))
 }

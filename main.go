@@ -49,7 +49,7 @@ func main() {
 		authorized.POST("/posts", contentHandler.CreatePost)
 		authorized.POST("/posts/:postID/comments", contentHandler.AddComment)
 		authorized.GET("/profiles", userHandler.GetProfile)
-		authorized.PATCH("/profiles/image", userHandler.UpdateProfilePicture)
+		authorized.PATCH("/profiles", userHandler.UpdateUserProfile)
 		authorized.POST("/posts/:postID/like", contentHandler.ToggleLikePostByID)
 	}
 
