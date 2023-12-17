@@ -158,6 +158,7 @@ func (h *contentHandler) GetCommentByPostID(c *gin.Context) {
 			CreatedDatetime: comment.CreatedDatetime,
 			UserID:          comment.UserID,
 			Username:        userMap[comment.UserID].Username,
+			DisplayName:     userMap[comment.UserID].DisplayName,
 			ProfileImage:    userMap[comment.UserID].ProfileImage,
 			CommentID:       comment.ID.Hex(),
 		})

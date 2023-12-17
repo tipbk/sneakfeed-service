@@ -21,6 +21,7 @@ type PostDetail struct {
 	CreatedDatetime *time.Time         `json:"createdDatetime" bson:"createdDatetime"`
 	ImageUrl        *string            `json:"imageUrl" bson:"imageUrl"`
 	Username        string             `json:"username"`
+	DisplayName     string             `json:"displayName"`
 	ProfileImage    string             `json:"profileImage"`
 	TotalLikes      int                `json:"totalLikes"`
 	TotalComments   int                `json:"totalComments"`
