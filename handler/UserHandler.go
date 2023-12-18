@@ -135,6 +135,7 @@ func (h *userHandler) GetUserByUsername(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, util.GenerateSuccessResponse(dto.GetUserByUsernameResponse{
 		IsFollowed: isFollowed,
+		IsYourUser: user.ID.Hex() == currentUser.ID.Hex(),
 		User:       user,
 	}))
 }
