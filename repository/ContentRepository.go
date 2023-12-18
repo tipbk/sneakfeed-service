@@ -17,7 +17,7 @@ type ContentRepository interface {
 	CreatePost(userID string, content string, imageUrl *string) (string, error)
 	AddComment(userID string, postID string, content string) (string, error)
 	FindPost(postID string) (*model.Post, error)
-	GetPosts(userID string, limit int, timeFrom *time.Time) (*model.PostDetailPagination, error)
+	GetPosts(userID string, limit int, timeFrom *time.Time, isFollowingPost bool) (*model.PostDetailPagination, error)
 	GetPostByID(userID, postID string) (*model.PostDetail, error)
 	GetCommentFromPostID(postID string) ([]model.Comment, error)
 	IsPostLikeByUserID(userID string, postID string) (bool, error)
@@ -188,8 +188,80 @@ func (r *contentRepository) CountLikeAndCommentOnPost(postID string) (int64, int
 	return likeCount, commentCount, nil
 }
 
-func (r *contentRepository) GetPosts(userID string, limit int, timeFrom *time.Time) (*model.PostDetailPagination, error) {
+func (r *contentRepository) GetPosts(userID string, limit int, timeFrom *time.Time, isFollowingPost bool) (*model.PostDetailPagination, error) {
 	collection := r.mongoClient.Database(r.envConfig.DatabaseName).Collection("post")
+	// for following posts
+	projectCurrentUserAsString := bson.D{
+		{"$project",
+			bson.D{
+				{"userID", "$userID"},
+				{"title", "$title"},
+				{"content", "$content"},
+				{"createdDatetime", "$createdDatetime"},
+				{"currentUserID", userID},
+			},
+		},
+	}
+	mergingFollowStage := bson.D{
+		{"$lookup",
+			bson.D{
+				{"from", "follow"},
+				{"localField", "currentUserID"},
+				{"foreignField", "userID"},
+				{"as", "results"},
+			},
+		},
+	}
+
+	getFollowingListStage := bson.D{
+		{"$project",
+			bson.D{
+				{"userID", "$userID"},
+				{"title", "$title"},
+				{"content", "$content"},
+				{"createdDatetime", "$createdDatetime"},
+				{"currentUserID", "$currentUserID"},
+				{"followUserList", "$results.followUserID"},
+			},
+		},
+	}
+
+	getMatchingPostStage := bson.D{
+		{"$match",
+			bson.D{
+				{"$or",
+					bson.A{
+						bson.D{
+							{"$expr",
+								bson.D{
+									{"$in",
+										bson.A{
+											"$userID",
+											"$followUserList",
+										},
+									},
+								},
+							},
+						},
+						bson.D{
+							{"$expr",
+								bson.D{
+									{"$eq",
+										bson.A{
+											"$currentUserID",
+											"$userID",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// end for following posts
 	sortingStage := bson.D{{"$sort", bson.D{{"createdDatetime", -1}}}}
 	projectConversionForSearchingStage := bson.D{
 		{"$project",
@@ -393,6 +465,44 @@ func (r *contentRepository) GetPosts(userID string, limit int, timeFrom *time.Ti
 			projectUserMappingStage,
 			paginationQueryStage,
 			paginationExtractingstage,
+		}
+	}
+
+	if isFollowingPost {
+		pipeline = mongo.Pipeline{
+			projectCurrentUserAsString,
+			mergingFollowStage,
+			getFollowingListStage,
+			getMatchingPostStage,
+			sortingStage,
+			projectConversionForSearchingStage,
+			likeMergingStage,
+			projectCountingLikeStage,
+			commentMergingStage,
+			projectCountingCommentStage,
+			userMergingStage,
+			projectUserMappingStage,
+			paginationQueryStage,
+			paginationExtractingstage,
+		}
+		if timeFrom != nil {
+			pipeline = mongo.Pipeline{
+				projectCurrentUserAsString,
+				mergingFollowStage,
+				getFollowingListStage,
+				getMatchingPostStage,
+				sortingStage,
+				timeAfterStage,
+				projectConversionForSearchingStage,
+				likeMergingStage,
+				projectCountingLikeStage,
+				commentMergingStage,
+				projectCountingCommentStage,
+				userMergingStage,
+				projectUserMappingStage,
+				paginationQueryStage,
+				paginationExtractingstage,
+			}
 		}
 	}
 

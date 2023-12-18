@@ -128,7 +128,13 @@ func (h *contentHandler) GetPosts(c *gin.Context) {
 		}
 	}
 
-	posts, err := h.contentService.GetPosts(user.ID.Hex(), limit, timeFrom)
+	isFindFollowingPost := false
+	filter := c.Query("filter")
+	if filter == "FOLLOWING_POST" {
+		isFindFollowingPost = true
+	}
+
+	posts, err := h.contentService.GetPosts(user.ID.Hex(), limit, timeFrom, isFindFollowingPost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
 		return
