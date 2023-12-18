@@ -237,6 +237,11 @@ func (h *userHandler) ToggleFollowUser(c *gin.Context) {
 		return
 	}
 
+	if request.FollowUserID == user.ID.Hex() {
+		c.JSON(http.StatusBadRequest, util.GenerateFailedResponse("you cannot follow yourself"))
+		return
+	}
+
 	isFollowed, err := h.userService.ToggleFollowOnUser(user.ID.Hex(), request.FollowUserID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
