@@ -10,6 +10,7 @@ import (
 	"github.com/tipbk/sneakfeed-service/dto"
 	"github.com/tipbk/sneakfeed-service/service"
 	"github.com/tipbk/sneakfeed-service/util"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type UserHandler interface {
@@ -18,6 +19,7 @@ type UserHandler interface {
 	GetProfile(c *gin.Context)
 	RefreshToken(c *gin.Context)
 	UpdateUserProfile(c *gin.Context)
+	GetUserByUsername(c *gin.Context)
 }
 
 type userHandler struct {
@@ -103,6 +105,25 @@ func (h *userHandler) GetProfile(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, util.GenerateSuccessResponse(currentUser))
+}
+
+func (h *userHandler) GetUserByUsername(c *gin.Context) {
+
+	username := c.Param("username")
+	if username == "" {
+		c.JSON(http.StatusBadRequest, util.GenerateFailedResponse("username cannot be empty"))
+		return
+	}
+	user, err := h.userService.FindUserWithUsername(username)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.JSON(http.StatusNotFound, util.GenerateFailedResponse("user doesn't not exist"))
+			return
+		}
+		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, util.GenerateSuccessResponse(user))
 }
 
 func (h *userHandler) RefreshToken(c *gin.Context) {

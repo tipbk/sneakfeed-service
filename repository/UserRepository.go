@@ -17,6 +17,7 @@ type UserRepository interface {
 	CreateUser(username string, password string, email string) (*model.User, error)
 	LoginUser(username string, password string) (*model.User, error)
 	FindUserWithUserID(userID string) (*model.User, error)
+	FindUserWithUsername(username string) (*model.User, error)
 	GetUsersByIDList(userIDs []string) ([]model.User, error)
 	UpdateProfile(userID string, updatedUser *model.User) error
 }
@@ -86,6 +87,15 @@ func (r *userRepository) FindUserWithUserID(userID string) (*model.User, error) 
 	}
 	var existingUser model.User
 	err = collection.FindOne(context.Background(), bson.M{"_id": userHex}).Decode(&existingUser)
+	return &existingUser, err
+}
+
+func (r *userRepository) FindUserWithUsername(username string) (*model.User, error) {
+	collection := r.mongoClient.Database(r.envConfig.DatabaseName).Collection("user")
+
+	var existingUser model.User
+	err := collection.FindOne(context.Background(), bson.M{"username": username}).Decode(&existingUser)
+
 	return &existingUser, err
 }
 

@@ -48,8 +48,11 @@ func main() {
 		authorized.GET("/posts/:postID/comments", contentHandler.GetCommentByPostID)
 		authorized.POST("/posts", contentHandler.CreatePost)
 		authorized.POST("/posts/:postID/comments", contentHandler.AddComment)
+		// profile for user
 		authorized.GET("/profiles", userHandler.GetProfile)
 		authorized.PATCH("/profiles", userHandler.UpdateUserProfile)
+		// user for see other users
+		authorized.GET("/users/:username", userHandler.GetUserByUsername)
 		authorized.POST("/posts/:postID/like", contentHandler.ToggleLikePostByID)
 	}
 
