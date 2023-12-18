@@ -116,7 +116,16 @@ func ParseStringToTime(s string) (*time.Time, error) {
 	t, err := time.Parse(layout, s)
 
 	if err != nil {
-		return nil, err
+		layout = "2006-01-02T15:04:05.00Z"
+		t, err = time.Parse(layout, s)
+		if err != nil {
+			layout = "2006-01-02T15:04:05.0Z"
+			t, err = time.Parse(layout, s)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 	}
 	return &t, err
 }
