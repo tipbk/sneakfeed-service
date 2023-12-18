@@ -2,6 +2,7 @@ package util
 
 import (
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -108,4 +109,22 @@ func GetUserFromContext(c *gin.Context) (*model.User, error) {
 		return nil, errors.New("no user")
 	}
 	return value.(*model.User), nil
+}
+
+func ParseStringToTime(s string) (*time.Time, error) {
+	layout := "2006-01-02T15:04:05.000Z"
+	t, err := time.Parse(layout, s)
+
+	if err != nil {
+		return nil, err
+	}
+	return &t, err
+}
+
+func ConvertStringToInt(s string) (int, error) {
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		return -1, err
+	}
+	return i, nil
 }

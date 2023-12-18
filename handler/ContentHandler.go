@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/tipbk/sneakfeed-service/dto"
@@ -105,7 +106,29 @@ func (h *contentHandler) GetPosts(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
 		return
 	}
-	posts, err := h.contentService.GetPosts(user.ID.Hex())
+	timeFromString := c.Query("from")
+	var timeFrom *time.Time
+
+	if timeFromString != "" {
+		t, err := util.ParseStringToTime(timeFromString)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
+			return
+		}
+		addedTime := t.Add(time.Millisecond * -1)
+		timeFrom = &addedTime
+	}
+
+	limitString := c.Query("limit")
+	limit := 5
+	if limitString != "" {
+		limit, err = util.ConvertStringToInt(limitString)
+		if err != nil {
+			limit = 5
+		}
+	}
+
+	posts, err := h.contentService.GetPosts(user.ID.Hex(), limit, timeFrom)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
 		return

@@ -28,3 +28,7 @@ type PostDetail struct {
 	IsLike          bool               `json:"isLike"`
 	IsComment       bool               `json:"isComment"`
 }
+type PostDetailPagination struct {
+	Pagination Pagination   `json:"pagination" bson:"pagination"`
+	Posts      []PostDetail `json:"posts" bson:"posts"`
+}

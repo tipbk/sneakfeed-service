@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"time"
 
 	"github.com/tipbk/sneakfeed-service/model"
 	"github.com/tipbk/sneakfeed-service/repository"
@@ -10,7 +11,7 @@ import (
 type ContentService interface {
 	CreatePost(userID string, content string, imageUrl *string) (string, error)
 	AddComment(userID string, postID string, content string) (string, error)
-	GetPosts(userID string) ([]model.PostDetail, error)
+	GetPosts(userID string, limit int, timeFrom *time.Time) (*model.PostDetailPagination, error)
 	GetPostByID(userID, postID string) (*model.PostDetail, error)
 	GetCommentFromPostID(postID string) ([]model.Comment, error)
 	FindPost(postID string) (*model.Post, error)
@@ -92,8 +93,8 @@ func (s *contentService) CountLikeAndCommentOnPost(postID string) (int64, int64,
 	return likeCount, commentCount, nil
 }
 
-func (s *contentService) GetPosts(userID string) ([]model.PostDetail, error) {
-	posts, err := s.contentRepository.GetPosts(userID)
+func (s *contentService) GetPosts(userID string, limit int, timeFrom *time.Time) (*model.PostDetailPagination, error) {
+	posts, err := s.contentRepository.GetPosts(userID, limit, timeFrom)
 	if err != nil {
 		return nil, err
 	}

@@ -17,7 +17,7 @@ type ContentRepository interface {
 	CreatePost(userID string, content string, imageUrl *string) (string, error)
 	AddComment(userID string, postID string, content string) (string, error)
 	FindPost(postID string) (*model.Post, error)
-	GetPosts(userID string) ([]model.PostDetail, error)
+	GetPosts(userID string, limit int, timeFrom *time.Time) (*model.PostDetailPagination, error)
 	GetPostByID(userID, postID string) (*model.PostDetail, error)
 	GetCommentFromPostID(postID string) ([]model.Comment, error)
 	IsPostLikeByUserID(userID string, postID string) (bool, error)
@@ -188,139 +188,214 @@ func (r *contentRepository) CountLikeAndCommentOnPost(postID string) (int64, int
 	return likeCount, commentCount, nil
 }
 
-func (r *contentRepository) GetPosts(userID string) ([]model.PostDetail, error) {
+func (r *contentRepository) GetPosts(userID string, limit int, timeFrom *time.Time) (*model.PostDetailPagination, error) {
 	collection := r.mongoClient.Database(r.envConfig.DatabaseName).Collection("post")
+	sortingStage := bson.D{{"$sort", bson.D{{"createdDatetime", -1}}}}
+	projectConversionForSearchingStage := bson.D{
+		{"$project",
+			bson.D{
+				{"_id", "$_id"},
+				{"content", "$content"},
+				{"userID", "$userID"},
+				{"createdDatetime", "$createdDatetime"},
+				{"imageUrl", "$imageUrl"},
+				{"stringPostID", bson.D{{"$toString", "$_id"}}},
+				{"objectUserID", bson.D{{"$toObjectId", "$userID"}}},
+			},
+		},
+	}
+	timeAfterStage := bson.D{{"$match", bson.D{{"createdDatetime", bson.D{{"$lte", timeFrom}}}}}}
+	likeMergingStage := bson.D{
+		{"$lookup",
+			bson.D{
+				{"from", "like"},
+				{"localField", "stringPostID"},
+				{"foreignField", "postID"},
+				{"as", "likeResult"},
+			},
+		},
+	}
 
-	pipeline := mongo.Pipeline{
-		bson.D{{"$sort", bson.D{{"createdDatetime", -1}}}},
-		bson.D{
-			{"$project",
-				bson.D{
-					{"_id", "$_id"},
-					{"content", "$content"},
-					{"userID", "$userID"},
-					{"createdDatetime", "$createdDatetime"},
-					{"imageUrl", "$imageUrl"},
-					{"stringPostID", bson.D{{"$toString", "$_id"}}},
-					{"objectUserID", bson.D{{"$toObjectId", "$userID"}}},
-				},
-			},
-		},
-		bson.D{
-			{"$lookup",
-				bson.D{
-					{"from", "like"},
-					{"localField", "stringPostID"},
-					{"foreignField", "postID"},
-					{"as", "likeResult"},
-				},
-			},
-		},
-		bson.D{
-			{"$project",
-				bson.D{
-					{"_id", "$_id"},
-					{"content", "$content"},
-					{"userID", "$userID"},
-					{"createdDatetime", "$createdDatetime"},
-					{"imageUrl", "$imageUrl"},
-					{"objectUserID", "$objectUserID"},
-					{"stringPostID", "$stringPostID"},
-					{"totalLikes", bson.D{{"$size", "$likeResult"}}},
-					{"isLike",
-						bson.D{
-							{"$ifNull",
-								bson.A{
-									bson.D{
-										{"$in",
-											bson.A{
-												userID,
-												"$likeResult.userID",
-											},
+	projectCountingLikeStage := bson.D{
+		{"$project",
+			bson.D{
+				{"_id", "$_id"},
+				{"content", "$content"},
+				{"userID", "$userID"},
+				{"createdDatetime", "$createdDatetime"},
+				{"imageUrl", "$imageUrl"},
+				{"objectUserID", "$objectUserID"},
+				{"stringPostID", "$stringPostID"},
+				{"totalLikes", bson.D{{"$size", "$likeResult"}}},
+				{"isLike",
+					bson.D{
+						{"$ifNull",
+							bson.A{
+								bson.D{
+									{"$in",
+										bson.A{
+											userID,
+											"$likeResult.userID",
 										},
 									},
-									false,
 								},
+								false,
 							},
 						},
 					},
-				},
-			},
-		},
-		bson.D{
-			{"$lookup",
-				bson.D{
-					{"from", "comment"},
-					{"localField", "stringPostID"},
-					{"foreignField", "postID"},
-					{"as", "commentResult"},
-				},
-			},
-		},
-		bson.D{
-			{"$project",
-				bson.D{
-					{"_id", "$_id"},
-					{"content", "$content"},
-					{"userID", "$userID"},
-					{"createdDatetime", "$createdDatetime"},
-					{"imageUrl", "$imageUrl"},
-					{"objectUserID", "$objectUserID"},
-					{"stringPostID", "$stringPostID"},
-					{"totalLikes", "$totalLikes"},
-					{"totalComments", bson.D{{"$size", "$commentResult"}}},
-					{"isLike", "$isLike"},
-					{"isComment",
-						bson.D{
-							{"$ifNull",
-								bson.A{
-									bson.D{
-										{"$in",
-											bson.A{
-												userID,
-												"$commentResult.userID",
-											},
-										},
-									},
-									false,
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		bson.D{
-			{"$lookup",
-				bson.D{
-					{"from", "user"},
-					{"localField", "objectUserID"},
-					{"foreignField", "_id"},
-					{"as", "userResult"},
-				},
-			},
-		},
-		bson.D{
-			{"$project",
-				bson.D{
-					{"_id", "$_id"},
-					{"content", "$content"},
-					{"userID", "$userID"},
-					{"createdDatetime", "$createdDatetime"},
-					{"imageUrl", "$imageUrl"},
-					{"objectUserID", "$objectUserID"},
-					{"stringPostID", "$stringPostID"},
-					{"totalLikes", "$totalLikes"},
-					{"totalComments", "$totalComments"},
-					{"username", bson.D{{"$first", "$userResult.username"}}},
-					{"displayName", bson.D{{"$first", "$userResult.displayName"}}},
-					{"profileImage", bson.D{{"$first", "$userResult.profileImage"}}},
-					{"isLike", "$isLike"},
-					{"isComment", "$isComment"},
 				},
 			},
 		},
 	}
+
+	commentMergingStage := bson.D{
+		{"$lookup",
+			bson.D{
+				{"from", "comment"},
+				{"localField", "stringPostID"},
+				{"foreignField", "postID"},
+				{"as", "commentResult"},
+			},
+		},
+	}
+
+	projectCountingCommentStage := bson.D{
+		{"$project",
+			bson.D{
+				{"_id", "$_id"},
+				{"content", "$content"},
+				{"userID", "$userID"},
+				{"createdDatetime", "$createdDatetime"},
+				{"imageUrl", "$imageUrl"},
+				{"objectUserID", "$objectUserID"},
+				{"stringPostID", "$stringPostID"},
+				{"totalLikes", "$totalLikes"},
+				{"totalComments", bson.D{{"$size", "$commentResult"}}},
+				{"isLike", "$isLike"},
+				{"isComment",
+					bson.D{
+						{"$ifNull",
+							bson.A{
+								bson.D{
+									{"$in",
+										bson.A{
+											userID,
+											"$commentResult.userID",
+										},
+									},
+								},
+								false,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	userMergingStage := bson.D{
+		{"$lookup",
+			bson.D{
+				{"from", "user"},
+				{"localField", "objectUserID"},
+				{"foreignField", "_id"},
+				{"as", "userResult"},
+			},
+		},
+	}
+
+	projectUserMappingStage := bson.D{
+		{"$project",
+			bson.D{
+				{"_id", "$_id"},
+				{"content", "$content"},
+				{"userID", "$userID"},
+				{"createdDatetime", "$createdDatetime"},
+				{"imageUrl", "$imageUrl"},
+				{"objectUserID", "$objectUserID"},
+				{"stringPostID", "$stringPostID"},
+				{"totalLikes", "$totalLikes"},
+				{"totalComments", "$totalComments"},
+				{"username", bson.D{{"$first", "$userResult.username"}}},
+				{"displayName", bson.D{{"$first", "$userResult.displayName"}}},
+				{"profileImage", bson.D{{"$first", "$userResult.profileImage"}}},
+				{"isLike", "$isLike"},
+				{"isComment", "$isComment"},
+			},
+		},
+	}
+
+	paginationQueryStage := bson.D{
+		{"$facet",
+			bson.D{
+				{"pagination",
+					bson.A{
+						bson.D{{"$count", "total"}},
+						bson.D{
+							{"$addFields",
+								bson.D{
+									{"limit", limit},
+								},
+							},
+						},
+					},
+				},
+				{"data",
+					bson.A{
+						bson.D{{"$limit", limit}},
+					},
+				},
+			},
+		},
+	}
+
+	paginationExtractingstage := bson.D{
+		{"$project",
+			bson.D{
+				{"pagination",
+					bson.D{
+						{"$arrayElemAt",
+							bson.A{
+								"$pagination",
+								0,
+							},
+						},
+					},
+				},
+				{"posts", "$data"},
+			},
+		},
+	}
+
+	pipeline := mongo.Pipeline{
+		sortingStage,
+		projectConversionForSearchingStage,
+		likeMergingStage,
+		projectCountingLikeStage,
+		commentMergingStage,
+		projectCountingCommentStage,
+		userMergingStage,
+		projectUserMappingStage,
+		paginationQueryStage,
+		paginationExtractingstage,
+	}
+
+	if timeFrom != nil {
+		pipeline = mongo.Pipeline{
+			sortingStage,
+			timeAfterStage,
+			projectConversionForSearchingStage,
+			likeMergingStage,
+			projectCountingLikeStage,
+			commentMergingStage,
+			projectCountingCommentStage,
+			userMergingStage,
+			projectUserMappingStage,
+			paginationQueryStage,
+			paginationExtractingstage,
+		}
+	}
+
 	cursor, err := collection.Aggregate(context.Background(), pipeline)
 	if err != nil {
 		fmt.Println("Error creating cursor:", err)
@@ -328,12 +403,16 @@ func (r *contentRepository) GetPosts(userID string) ([]model.PostDetail, error) 
 	}
 	defer cursor.Close(context.Background())
 
-	var results []model.PostDetail
+	var results []model.PostDetailPagination
 	if err = cursor.All(context.Background(), &results); err != nil {
 		return nil, err
 	}
 
-	return results, nil
+	if len(results) <= 0 {
+		return nil, errors.New("couldn't find a post")
+	}
+
+	return &results[0], nil
 }
 
 func (r *contentRepository) GetPostByID(userID, postID string) (*model.PostDetail, error) {
