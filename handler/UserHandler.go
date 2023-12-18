@@ -20,6 +20,7 @@ type UserHandler interface {
 	RefreshToken(c *gin.Context)
 	UpdateUserProfile(c *gin.Context)
 	GetUserByUsername(c *gin.Context)
+	ToggleFollowUser(c *gin.Context)
 }
 
 type userHandler struct {
@@ -108,7 +109,11 @@ func (h *userHandler) GetProfile(c *gin.Context) {
 }
 
 func (h *userHandler) GetUserByUsername(c *gin.Context) {
-
+	currentUser, err := util.GetUserFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, util.GenerateFailedResponse(err.Error()))
+		return
+	}
 	username := c.Param("username")
 	if username == "" {
 		c.JSON(http.StatusBadRequest, util.GenerateFailedResponse("username cannot be empty"))
@@ -123,7 +128,15 @@ func (h *userHandler) GetUserByUsername(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
 		return
 	}
-	c.JSON(http.StatusOK, util.GenerateSuccessResponse(user))
+	isFollowed, err := h.userService.IsUserFollowed(currentUser.ID.Hex(), user.ID.Hex())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, util.GenerateSuccessResponse(dto.GetUserByUsernameResponse{
+		IsFollowed: isFollowed,
+		User:       user,
+	}))
 }
 
 func (h *userHandler) RefreshToken(c *gin.Context) {
@@ -204,4 +217,31 @@ func (h *userHandler) UpdateUserProfile(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, util.GenerateSuccessResponse("updated"))
+}
+
+func (h *userHandler) ToggleFollowUser(c *gin.Context) {
+	user, err := util.GetUserFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, util.GenerateFailedResponse(err.Error()))
+		return
+	}
+
+	var request dto.ToggleFollowUserRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, util.GenerateFailedResponse(err.Error()))
+		return
+	}
+
+	if request.FollowUserID == "" {
+		c.JSON(http.StatusBadRequest, util.GenerateFailedResponse("followUserID cannot be empty"))
+		return
+	}
+
+	isFollowed, err := h.userService.ToggleFollowOnUser(user.ID.Hex(), request.FollowUserID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, util.GenerateSuccessResponse(dto.ToggleFollowUserResponse{IsFollowed: isFollowed}))
 }

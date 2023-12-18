@@ -19,6 +19,8 @@ type UserService interface {
 	FindUserWithUsername(username string) (*model.User, error)
 	GetUsersByIDList(userIDs []string) ([]model.User, error)
 	UpdateProfile(userID string, updatedUser *model.User) error
+	ToggleFollowOnUser(userID string, followUserID string) (bool, error)
+	IsUserFollowed(userID, followUserID string) (bool, error)
 }
 
 func NewUserService(userRepository repository.UserRepository) UserService {
@@ -111,4 +113,32 @@ func (s *userService) validateRegisterInput(username, password, email string) er
 	}
 
 	return nil
+}
+
+func (s *userService) IsUserFollowed(userID, followUserID string) (bool, error) {
+	isFollowed, err := s.userRepository.IsUserFollowed(userID, followUserID)
+	if err != nil {
+		return false, err
+	}
+	return isFollowed, nil
+}
+
+func (s *userService) ToggleFollowOnUser(userID string, followUserID string) (bool, error) {
+	isFollowed, err := s.userRepository.IsUserFollowed(userID, followUserID)
+	if err != nil {
+		return false, err
+	}
+	if isFollowed { //do unfollow
+		err := s.userRepository.UnfollowUser(userID, followUserID)
+		if err != nil {
+			return false, err
+		}
+		return false, nil
+	} else { // do follow
+		_, err := s.userRepository.FollowUser(userID, followUserID)
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	}
 }

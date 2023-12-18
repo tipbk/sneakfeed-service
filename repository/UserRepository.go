@@ -20,6 +20,9 @@ type UserRepository interface {
 	FindUserWithUsername(username string) (*model.User, error)
 	GetUsersByIDList(userIDs []string) ([]model.User, error)
 	UpdateProfile(userID string, updatedUser *model.User) error
+	FollowUser(userID string, followUserID string) (string, error)
+	UnfollowUser(userID string, followUserID string) error
+	IsUserFollowed(userID string, followUserID string) (bool, error)
 }
 
 type userRepository struct {
@@ -161,4 +164,53 @@ func (r *userRepository) UpdateProfile(userID string, updatedUser *model.User) e
 		return err
 	}
 	return nil
+}
+
+func (r *userRepository) FollowUser(userID string, followUserID string) (string, error) {
+	follow := model.Follow{
+		ID:           primitive.NewObjectID(),
+		UserID:       userID,
+		FollowUserID: followUserID,
+	}
+	collection := r.mongoClient.Database(r.envConfig.DatabaseName).Collection("follow")
+	result, err := collection.InsertOne(context.Background(), follow)
+	if err != nil {
+		return "", err
+	}
+	oid, ok := result.InsertedID.(primitive.ObjectID)
+	if !ok {
+		return "", errors.New("there are some errors when following a user")
+	}
+
+	return oid.Hex(), nil
+}
+
+func (r *userRepository) UnfollowUser(userID string, followUserID string) error {
+	collection := r.mongoClient.Database(r.envConfig.DatabaseName).Collection("follow")
+	filter := bson.M{"userID": userID, "followUserID": followUserID}
+	result, err := collection.DeleteOne(context.Background(), filter)
+	if err != nil {
+		fmt.Println("Error deleting document:", err)
+		return err
+	}
+	if result.DeletedCount == 1 {
+		fmt.Println("Successfully deleted one document")
+		return nil
+	}
+	return errors.New("no documents were deleted")
+}
+
+func (r *userRepository) IsUserFollowed(userID string, followUserID string) (bool, error) {
+	filter := bson.M{"userID": userID, "followUserID": followUserID}
+	collection := r.mongoClient.Database(r.envConfig.DatabaseName).Collection("follow")
+	var follow model.Follow
+	err := collection.FindOne(context.Background(), filter).Decode(&follow)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return false, nil
+		} else {
+			return false, err
+		}
+	}
+	return true, nil
 }

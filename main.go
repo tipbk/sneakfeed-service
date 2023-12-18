@@ -53,6 +53,7 @@ func main() {
 		authorized.PATCH("/profiles", userHandler.UpdateUserProfile)
 		// user for see other users
 		authorized.GET("/users/:username", userHandler.GetUserByUsername)
+		authorized.POST("/users/toggle-follow", userHandler.ToggleFollowUser)
 		authorized.POST("/posts/:postID/like", contentHandler.ToggleLikePostByID)
 	}
 
