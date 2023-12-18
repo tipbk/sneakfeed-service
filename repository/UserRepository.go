@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/tipbk/sneakfeed-service/config"
 	"github.com/tipbk/sneakfeed-service/model"
@@ -167,10 +168,12 @@ func (r *userRepository) UpdateProfile(userID string, updatedUser *model.User) e
 }
 
 func (r *userRepository) FollowUser(userID string, followUserID string) (string, error) {
+	now := time.Now()
 	follow := model.Follow{
-		ID:           primitive.NewObjectID(),
-		UserID:       userID,
-		FollowUserID: followUserID,
+		ID:              primitive.NewObjectID(),
+		UserID:          userID,
+		FollowUserID:    followUserID,
+		CreatedDatetime: &now,
 	}
 	collection := r.mongoClient.Database(r.envConfig.DatabaseName).Collection("follow")
 	result, err := collection.InsertOne(context.Background(), follow)
