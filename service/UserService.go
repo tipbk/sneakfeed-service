@@ -17,6 +17,7 @@ type UserService interface {
 	LoginUser(username string, password string) (*model.User, error)
 	FindUserWithUserID(userID string) (*model.User, error)
 	FindUserWithUsername(username string) (*model.User, error)
+	FindUserViewByOthers(currentUserID, targetUsername string) (*model.UserViewByOthers, error)
 	GetUsersByIDList(userIDs []string) ([]model.User, error)
 	UpdateProfile(userID string, updatedUser *model.User) error
 	ToggleFollowOnUser(userID string, followUserID string) (bool, error)
@@ -59,6 +60,14 @@ func (s *userService) FindUserWithUserID(userID string) (*model.User, error) {
 
 func (s *userService) FindUserWithUsername(username string) (*model.User, error) {
 	user, err := s.userRepository.FindUserWithUsername(username)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (s *userService) FindUserViewByOthers(currentUserID, targetUsername string) (*model.UserViewByOthers, error) {
+	user, err := s.userRepository.FindUserViewByOthers(currentUserID, targetUsername)
 	if err != nil {
 		return nil, err
 	}

@@ -19,6 +19,7 @@ type UserRepository interface {
 	LoginUser(username string, password string) (*model.User, error)
 	FindUserWithUserID(userID string) (*model.User, error)
 	FindUserWithUsername(username string) (*model.User, error)
+	FindUserViewByOthers(currentUserID, targetUsername string) (*model.UserViewByOthers, error)
 	GetUsersByIDList(userIDs []string) ([]model.User, error)
 	UpdateProfile(userID string, updatedUser *model.User) error
 	FollowUser(userID string, followUserID string) (string, error)
@@ -101,6 +102,99 @@ func (r *userRepository) FindUserWithUsername(username string) (*model.User, err
 	err := collection.FindOne(context.Background(), bson.M{"username": username}).Decode(&existingUser)
 
 	return &existingUser, err
+}
+
+func (r *userRepository) FindUserViewByOthers(currentUserID, targetUsername string) (*model.UserViewByOthers, error) {
+	collection := r.mongoClient.Database(r.envConfig.DatabaseName).Collection("user")
+	pipeline := mongo.Pipeline{
+		bson.D{
+			{"$project",
+				bson.D{
+					{"stringUserID", bson.D{{"$toString", "$_id"}}},
+					{"username", "$username"},
+					{"profileImage", "$profileImage"},
+					{"displayName", "$displayName"},
+					{"email", "$email"},
+				},
+			},
+		},
+		bson.D{
+			{"$lookup",
+				bson.D{
+					{"from", "follow"},
+					{"localField", "stringUserID"},
+					{"foreignField", "userID"},
+					{"as", "followingResults"},
+				},
+			},
+		},
+		bson.D{
+			{"$lookup",
+				bson.D{
+					{"from", "follow"},
+					{"localField", "stringUserID"},
+					{"foreignField", "followUserID"},
+					{"as", "followerResults"},
+				},
+			},
+		},
+		bson.D{
+			{"$addFields",
+				bson.D{
+					{"isFollowed",
+						bson.D{
+							{"$cond",
+								bson.A{
+									bson.D{
+										{"$in",
+											bson.A{
+												currentUserID,
+												"$followerResults.userID",
+											},
+										},
+									},
+									true,
+									false,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		bson.D{
+			{"$project",
+				bson.D{
+					{"stringUserID", "$stringUserID"},
+					{"username", "$username"},
+					{"displayName", "$displayName"},
+					{"profileImage", "$profileImage"},
+					{"isFollowed", "$isFollowed"},
+					{"totalFollowers", bson.D{{"$size", "$followerResults"}}},
+					{"totalFollowing", bson.D{{"$size", "$followingResults"}}},
+				},
+			},
+		},
+		bson.D{{"$match", bson.D{{"username", targetUsername}}}},
+	}
+
+	cursor, err := collection.Aggregate(context.Background(), pipeline)
+	if err != nil {
+		fmt.Println("Error creating cursor:", err)
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+
+	var results []model.UserViewByOthers
+	if err = cursor.All(context.Background(), &results); err != nil {
+		return nil, err
+	}
+
+	if len(results) <= 0 {
+		return nil, errors.New("couldn't find a post")
+	}
+
+	return &results[0], nil
 }
 
 func (r *userRepository) LoginUser(username string, password string) (*model.User, error) {

@@ -19,7 +19,7 @@ type UserHandler interface {
 	GetProfile(c *gin.Context)
 	RefreshToken(c *gin.Context)
 	UpdateUserProfile(c *gin.Context)
-	GetUserByUsername(c *gin.Context)
+	GetUserByOthers(c *gin.Context)
 	ToggleFollowUser(c *gin.Context)
 }
 
@@ -108,7 +108,7 @@ func (h *userHandler) GetProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, util.GenerateSuccessResponse(currentUser))
 }
 
-func (h *userHandler) GetUserByUsername(c *gin.Context) {
+func (h *userHandler) GetUserByOthers(c *gin.Context) {
 	currentUser, err := util.GetUserFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, util.GenerateFailedResponse(err.Error()))
@@ -119,7 +119,7 @@ func (h *userHandler) GetUserByUsername(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, util.GenerateFailedResponse("username cannot be empty"))
 		return
 	}
-	user, err := h.userService.FindUserWithUsername(username)
+	userView, err := h.userService.FindUserViewByOthers(currentUser.ID.Hex(), username)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			c.JSON(http.StatusNotFound, util.GenerateFailedResponse("user doesn't not exist"))
@@ -128,15 +128,9 @@ func (h *userHandler) GetUserByUsername(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
 		return
 	}
-	isFollowed, err := h.userService.IsUserFollowed(currentUser.ID.Hex(), user.ID.Hex())
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
-		return
-	}
 	c.JSON(http.StatusOK, util.GenerateSuccessResponse(dto.GetUserByUsernameResponse{
-		IsFollowed: isFollowed,
-		IsYourUser: user.ID.Hex() == currentUser.ID.Hex(),
-		User:       user,
+		IsYourUser:       userView.ID.Hex() == currentUser.ID.Hex(),
+		UserViewByOthers: userView,
 	}))
 }
 
