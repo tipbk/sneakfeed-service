@@ -31,7 +31,7 @@ func main() {
 	userService := service.NewUserService(userRepository)
 	userHandler := handler.NewUserHandler(envConfig, userService, imageUploaderService)
 	contentRepository := repository.NewContentReepository(envConfig, mongoClient)
-	contentService := service.NewContentService(contentRepository)
+	contentService := service.NewContentService(envConfig, contentRepository)
 	contentHandler := handler.NewContentHandler(contentService, userService, imageUploaderService)
 	authMiddleware := middleware.NewAuthMiddleware(envConfig, userService)
 
@@ -55,6 +55,7 @@ func main() {
 		authorized.GET("/users/:username", userHandler.GetUserByOthers)
 		authorized.POST("/users/toggle-follow", userHandler.ToggleFollowUser)
 		authorized.POST("/posts/:postID/like", contentHandler.ToggleLikePostByID)
+		authorized.POST("/metadata", contentHandler.GetMetadata)
 	}
 
 	r.Run()

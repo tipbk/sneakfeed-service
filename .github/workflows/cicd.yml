@@ -48,3 +48,4 @@ jobs:
             ${{ secrets.MONGODB_USERNAME_KEY }}=${{ secrets.MONGODB_USERNAME_VALUE }}
             ${{ secrets.MONGODB_PASSWORD_KEY }}=${{ secrets.MONGODB_PASSWORD_VALUE }}
             ${{ secrets.DATABASE_NAME_KEY }}=${{ secrets.DATABASE_NAME_VALUE }}
+            ${{ secrets.METADATA_SERVICE_URL_KEY }}=${{ secrets.METADATA_SERVICE_URL_VALUE }}

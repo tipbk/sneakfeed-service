@@ -25,6 +25,7 @@ type EnvConfig struct {
 	MongodbUsername    string
 	MongodbPassword    string
 	DatabaseName       string
+	MetadataEndpoint   string
 }
 
 func GetEnvConfig() *EnvConfig {
@@ -36,5 +37,6 @@ func GetEnvConfig() *EnvConfig {
 		MongodbUsername:    os.Getenv("MONGODB_USERNAME"),
 		MongodbPassword:    os.Getenv("MONGODB_PASSWORD"),
 		DatabaseName:       os.Getenv("DATABASE_NAME"),
+		MetadataEndpoint:   os.Getenv("METADATA_SERVICE_ENDPOINT_URL"),
 	}
 }

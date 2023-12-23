@@ -18,6 +18,7 @@ type ContentHandler interface {
 	GetPostByID(c *gin.Context)
 	GetCommentByPostID(c *gin.Context)
 	ToggleLikePostByID(c *gin.Context)
+	GetMetadata(c *gin.Context)
 }
 
 type contentHandler struct {
@@ -214,4 +215,23 @@ func (h *contentHandler) ToggleLikePostByID(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, util.GenerateSuccessResponse(dto.ToggleLikeResponse{IsLike: isLike}))
+}
+
+func (h *contentHandler) GetMetadata(c *gin.Context) {
+	var request dto.MetadataRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, util.GenerateFailedResponse(err.Error()))
+		return
+	}
+	if request.Url == "" {
+		c.JSON(http.StatusBadRequest, util.GenerateFailedResponse("param url is needed"))
+		return
+	}
+	resp, err := h.contentService.GetMetadata(request.Url)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, util.GenerateSuccessResponse(resp))
 }

@@ -1,9 +1,16 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"net/url"
 	"time"
 
+	"github.com/tipbk/sneakfeed-service/config"
+	"github.com/tipbk/sneakfeed-service/dto"
 	"github.com/tipbk/sneakfeed-service/model"
 	"github.com/tipbk/sneakfeed-service/repository"
 )
@@ -17,14 +24,17 @@ type ContentService interface {
 	FindPost(postID string) (*model.Post, error)
 	ToggleLikeOnPost(userID string, postID string) (bool, error)
 	CountLikeAndCommentOnPost(postID string) (int64, int64, error)
+	GetMetadata(targetUrl string) (*dto.MetadataExternal, error)
 }
 
 type contentService struct {
+	envConfig         *config.EnvConfig
 	contentRepository repository.ContentRepository
 }
 
-func NewContentService(contentRepository repository.ContentRepository) ContentService {
+func NewContentService(envConfig *config.EnvConfig, contentRepository repository.ContentRepository) ContentService {
 	return &contentService{
+		envConfig:         envConfig,
 		contentRepository: contentRepository,
 	}
 }
@@ -107,4 +117,33 @@ func (s *contentService) GetPostByID(userID, postID string) (*model.PostDetail, 
 		return nil, err
 	}
 	return post, nil
+}
+
+func (s *contentService) GetMetadata(targetUrl string) (*dto.MetadataExternal, error) {
+	client := &http.Client{}
+	requestedUrl := fmt.Sprintf("%s/api/metadata/%s", s.envConfig.MetadataEndpoint, url.QueryEscape(targetUrl))
+	req, err := http.NewRequest("GET", requestedUrl, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("referer", requestedUrl)
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if !(resp.StatusCode >= 200 && resp.StatusCode <= 299) {
+		return nil, errors.New("response status error from metadata service")
+	}
+	var response dto.MetadataExternal
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal([]byte(body), &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response, nil
 }
