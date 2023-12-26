@@ -16,7 +16,7 @@ import (
 )
 
 type ContentService interface {
-	CreatePost(userID string, content string, imageUrl *string) (string, error)
+	CreatePost(userID string, content string, imageUrl *string, ogTitle *string, ogDescription *string, ogLink *string, ogImage *string, ogDomain *string) (string, error)
 	AddComment(userID string, postID string, content string) (string, error)
 	GetPosts(userID string, limit int, timeFrom *time.Time, isFollowingPost bool) (*model.PostDetailPagination, error)
 	GetPostByID(userID, postID string) (*model.PostDetail, error)
@@ -39,8 +39,8 @@ func NewContentService(envConfig *config.EnvConfig, contentRepository repository
 	}
 }
 
-func (s *contentService) CreatePost(userID string, content string, imageUrl *string) (string, error) {
-	postID, err := s.contentRepository.CreatePost(userID, content, imageUrl)
+func (s *contentService) CreatePost(userID string, content string, imageUrl *string, ogTitle *string, ogDescription *string, ogLink *string, ogImage *string, ogDomain *string) (string, error) {
+	postID, err := s.contentRepository.CreatePost(userID, content, imageUrl, ogTitle, ogDescription, ogLink, ogImage, ogDomain)
 	if err != nil {
 		return "", err
 	}

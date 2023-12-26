@@ -14,7 +14,7 @@ import (
 )
 
 type ContentRepository interface {
-	CreatePost(userID string, content string, imageUrl *string) (string, error)
+	CreatePost(userID string, content string, imageUrl *string, ogTitle *string, ogDescription *string, ogLink *string, ogImage *string, ogDomain *string) (string, error)
 	AddComment(userID string, postID string, content string) (string, error)
 	FindPost(postID string) (*model.Post, error)
 	GetPosts(userID string, limit int, timeFrom *time.Time, isFollowingPost bool) (*model.PostDetailPagination, error)
@@ -38,7 +38,7 @@ func NewContentReepository(envConfig *config.EnvConfig, mongoClient *mongo.Clien
 	}
 }
 
-func (r *contentRepository) CreatePost(userID string, content string, imageUrl *string) (string, error) {
+func (r *contentRepository) CreatePost(userID string, content string, imageUrl *string, ogTitle *string, ogDescription *string, ogLink *string, ogImage *string, ogDomain *string) (string, error) {
 	now := time.Now()
 	newPost := model.Post{
 		ID:              primitive.NewObjectID(),
@@ -46,6 +46,11 @@ func (r *contentRepository) CreatePost(userID string, content string, imageUrl *
 		Content:         content,
 		CreatedDatetime: &now,
 		ImageUrl:        imageUrl,
+		OgTitle:         ogTitle,
+		OgLink:          ogLink,
+		OgDescription:   ogDescription,
+		OgDomain:        ogDomain,
+		OgImage:         ogImage,
 	}
 	collection := r.mongoClient.Database(r.envConfig.DatabaseName).Collection("post")
 	result, err := collection.InsertOne(context.Background(), newPost)

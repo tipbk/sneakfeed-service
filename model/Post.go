@@ -12,6 +12,11 @@ type Post struct {
 	Content         string             `json:"content" bson:"content"`
 	CreatedDatetime *time.Time         `json:"createdDatetime" bson:"createdDatetime"`
 	ImageUrl        *string            `json:"imageUrl" bson:"imageUrl"`
+	OgTitle         *string            `json:"ogTitle" bson:"ogTitle"`
+	OgDescription   *string            `json:"ogDescription" bson:"ogDescription"`
+	OgLink          *string            `json:"ogLink" bson:"ogLink"`
+	OgImage         *string            `json:"ogImage" bson:"ogImage"`
+	OgDomain        *string            `json:"ogDoamin" bson:"ogDomain"`
 }
 
 type PostDetail struct {

@@ -60,7 +60,7 @@ func (h *contentHandler) CreatePost(c *gin.Context) {
 		}
 		imageUrl = &uploadResponse.Data.Url
 	}
-	postID, err := h.contentService.CreatePost(user.ID.Hex(), createPostRequest.Content, imageUrl)
+	postID, err := h.contentService.CreatePost(user.ID.Hex(), createPostRequest.Content, imageUrl, createPostRequest.OgTitle, createPostRequest.OgDescription, createPostRequest.OgLink, createPostRequest.OgImage, createPostRequest.OgDomain)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
 		return
