@@ -32,6 +32,11 @@ type PostDetail struct {
 	TotalComments   int                `json:"totalComments"`
 	IsLike          bool               `json:"isLike"`
 	IsComment       bool               `json:"isComment"`
+	OgTitle         *string            `json:"ogTitle"`
+	OgDescription   *string            `json:"ogDescription"`
+	OgLink          *string            `json:"ogLink"`
+	OgImage         *string            `json:"ogImage"`
+	OgDomain        *string            `json:"ogDoamin"`
 }
 type PostDetailPagination struct {
 	Pagination Pagination   `json:"pagination" bson:"pagination"`
