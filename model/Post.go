@@ -36,7 +36,7 @@ type PostDetail struct {
 	OgDescription   *string            `json:"ogDescription"`
 	OgLink          *string            `json:"ogLink"`
 	OgImage         *string            `json:"ogImage"`
-	OgDomain        *string            `json:"ogDoamin"`
+	OgDomain        *string            `json:"ogDomain"`
 }
 type PostDetailPagination struct {
 	Pagination Pagination   `json:"pagination" bson:"pagination"`
