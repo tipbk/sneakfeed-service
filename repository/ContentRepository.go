@@ -17,7 +17,7 @@ type ContentRepository interface {
 	CreatePost(userID string, content string, imageUrl *string, ogTitle *string, ogDescription *string, ogLink *string, ogImage *string, ogDomain *string) (string, error)
 	AddComment(userID string, postID string, content string) (string, error)
 	FindPost(postID string) (*model.Post, error)
-	GetPosts(userID string, limit int, timeFrom *time.Time, isFollowingPost bool) (*model.PostDetailPagination, error)
+	GetPosts(userID string, limit int, timeFrom *time.Time, postFilter, username string) (*model.PostDetailPagination, error)
 	GetPostByID(userID, postID string) (*model.PostDetail, error)
 	GetCommentFromPostID(postID string) ([]model.Comment, error)
 	IsPostLikeByUserID(userID string, postID string) (bool, error)
@@ -193,7 +193,10 @@ func (r *contentRepository) CountLikeAndCommentOnPost(postID string) (int64, int
 	return likeCount, commentCount, nil
 }
 
-func (r *contentRepository) GetPosts(userID string, limit int, timeFrom *time.Time, isFollowingPost bool) (*model.PostDetailPagination, error) {
+func (r *contentRepository) GetPosts(userID string, limit int, timeFrom *time.Time, postFilter, username string) (*model.PostDetailPagination, error) {
+	fmt.Println(postFilter)
+	fmt.Println(username)
+	fmt.Println(timeFrom)
 	collection := r.mongoClient.Database(r.envConfig.DatabaseName).Collection("post")
 	// for following posts
 	projectCurrentUserAsString := bson.D{
@@ -476,6 +479,9 @@ func (r *contentRepository) GetPosts(userID string, limit int, timeFrom *time.Ti
 		},
 	}
 
+	matchUserStage := bson.D{{"$match", bson.D{{"username", username}}}}
+
+	// DEFAULT FILTER (GLOBAL FEEDS)
 	pipeline := mongo.Pipeline{
 		sortingStage,
 		projectConversionForSearchingStage,
@@ -505,7 +511,8 @@ func (r *contentRepository) GetPosts(userID string, limit int, timeFrom *time.Ti
 		}
 	}
 
-	if isFollowingPost {
+	// FOLLOWING FEED FILTER
+	if postFilter == "FOLLOWING_POST" {
 		pipeline = mongo.Pipeline{
 			projectCurrentUserAsString,
 			mergingFollowStage,
@@ -541,6 +548,40 @@ func (r *contentRepository) GetPosts(userID string, limit int, timeFrom *time.Ti
 				paginationExtractingstage,
 			}
 		}
+	} else if postFilter == "USER" {
+		if username == "" {
+			return nil, errors.New("username cannot be empty")
+		}
+		pipeline = mongo.Pipeline{
+			sortingStage,
+			projectConversionForSearchingStage,
+			likeMergingStage,
+			projectCountingLikeStage,
+			commentMergingStage,
+			projectCountingCommentStage,
+			userMergingStage,
+			projectUserMappingStage,
+			matchUserStage,
+			paginationQueryStage,
+			paginationExtractingstage,
+		}
+
+		if timeFrom != nil {
+			pipeline = mongo.Pipeline{
+				sortingStage,
+				timeAfterStage,
+				projectConversionForSearchingStage,
+				likeMergingStage,
+				projectCountingLikeStage,
+				commentMergingStage,
+				projectCountingCommentStage,
+				userMergingStage,
+				projectUserMappingStage,
+				matchUserStage,
+				paginationQueryStage,
+				paginationExtractingstage,
+			}
+		}
 	}
 
 	cursor, err := collection.Aggregate(context.Background(), pipeline)
@@ -558,6 +599,7 @@ func (r *contentRepository) GetPosts(userID string, limit int, timeFrom *time.Ti
 	if len(results) <= 0 {
 		return nil, errors.New("couldn't find a post")
 	}
+	fmt.Println(results)
 
 	return &results[0], nil
 }

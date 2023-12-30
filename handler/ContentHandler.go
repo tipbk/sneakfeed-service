@@ -129,13 +129,16 @@ func (h *contentHandler) GetPosts(c *gin.Context) {
 		}
 	}
 
-	isFindFollowingPost := false
+	var posts *model.PostDetailPagination
 	filter := c.Query("filter")
-	if filter == "FOLLOWING_POST" {
-		isFindFollowingPost = true
+	username := c.Query("username")
+
+	if filter == "USER" && username == "" {
+		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse("username cannot be empty if you user USER filter"))
+		return
 	}
 
-	posts, err := h.contentService.GetPosts(user.ID.Hex(), limit, timeFrom, isFindFollowingPost)
+	posts, err = h.contentService.GetPosts(user.ID.Hex(), limit, timeFrom, filter, username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, util.GenerateFailedResponse(err.Error()))
 		return
