@@ -3,6 +3,8 @@
 Sneakfeed is a social media application like Twitter.
 This project aims to play with unfamiliar techstacks such as Mongodb and Imagekit APIs.
 
+For Frontend client, please see https://github.com/tipbk/sneakfeed-client.
+
 ## API List
 
 ### No auth zone
