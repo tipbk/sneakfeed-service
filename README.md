@@ -22,7 +22,11 @@ This project aims to play with unfamiliar techstacks such as Mongodb and Imageki
 - `POST /posts/:postID/like` -> Like a post
 
 - `GET /profiles` -> Get current user profile
-- `PATCH /profiles` -> Update profile image
+- `PATCH /profiles` -> Update profile image and display name
+
+- `GET /users/:username` -> See users profile
+- `POST /users/toggle-follow` -> Follow/Unfollow other users
+- `POST /metadata` -> Get metadata for OG Meta
 
 ## Environment Variables
 
@@ -34,6 +38,7 @@ This project aims to play with unfamiliar techstacks such as Mongodb and Imageki
 - MONGODB_USERNAME -> { MONGODB_USERNAME }
 - MONGODB_PASSWORD -> { MONGODB_PASSWORD }
 - DATABASE_NAME -> { DATABASE_NAME }
+- METADATA_SERVICE_ENDPOINT_URL -> { METADATA_SERVICE_ENDPOINT_URL in here I use external website from other providers, you can do it your own or find it by your own. }
 
 ## How to run the project locally?
 
